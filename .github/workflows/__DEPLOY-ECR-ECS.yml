@@ -12,9 +12,7 @@ env:
   ECS_SERVICE: twin-mlops-service                 
   ECS_CLUSTER: default                 
   ECS_TASK_DEFINITION: .github/workflows/__FARGATE_SERVICE_DEFINITION.json
-
-  CONTAINER_NAME: http
-                                               
+  CONTAINER_NAME: twin                 
 
 jobs:
   deploy:
