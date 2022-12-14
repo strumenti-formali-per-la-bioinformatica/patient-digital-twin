@@ -16,7 +16,7 @@ def load_physiology(window_size=1000):
     # x_ras = pd.read_csv('data/70/DKD_drug-5_glu-7_infection-1_renal-impaired.csv')
     # x_cardio = pd.read_csv('data/70/CARDIO_drug-5_glu-7_infection-1_renal-impaired.csv', index_col=0)
 
-    x_cardio = x_cardio[['t', 'Pra', 'Prv', 'Pla', 'Plv']]
+    x_cardio = x_cardio[['t2', 'Pra', 'Prv', 'Pla', 'Plv']]
     x_ras.drop(['angII_norm', 'IR'], axis=1, inplace=True)
     x_cardio.columns = ['t2', 'Pra', 'Prv', 'Pla', 'Plv']
     tx_ras = x_ras['t']
@@ -27,7 +27,7 @@ def load_physiology(window_size=1000):
 
     x_list = []
     for c in list(x_ras.columns) + list(x_cardio.columns):
-        print(c)
+        #print(c)
         if c in x_ras.columns:
             f = interpolate.interp1d(tx_ras, x_ras[c].values)
             x_list.append(f(t1))
@@ -60,7 +60,7 @@ def load_physiology(window_size=1000):
     t_list_1 = []
     t_list_2 = []
     for batch in range(x.shape[0] - 2 * window_size + 1):
-        print(f"{batch} - {batch + window_size - 2} -> {batch + window_size - 1} - {batch + 2 * window_size - 3}")
+        #print(f"{batch} - {batch + window_size - 2} -> {batch + window_size - 1} - {batch + 2 * window_size - 3}")
         samples.append(x[batch:batch + window_size - 2])
         labels.append(x[batch + window_size - 1:batch + 2 * window_size - 3])
         t_list_1.append(t1[batch + window_size - 1:batch + 2 * window_size - 3])
@@ -116,4 +116,4 @@ def load_physiology(window_size=1000):
     #     for j in range(len(features)):
     #         edge_list.append((i, j))
 
-    return x_train, y_train, x_val, y_val, x_test, y_test, edge_list, addendum, scaler
+    return x_train, y_train, x_test, y_test, edge_list, addendum, scaler

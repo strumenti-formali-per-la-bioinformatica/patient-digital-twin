@@ -13,8 +13,9 @@ import digital_patient
 from digital_patient.conformal.base import RegressorAdapter
 from digital_patient.conformal.icp import IcpRegressor
 from digital_patient.conformal.nc import RegressorNc
-from examples.load_data import load_physiology
-from examples.plot_graph import plot_graph
+from load_data import load_physiology
+from our_load_data import our_load_physiology
+from plot_graph import plot_graph
 
 
 def main():
@@ -25,14 +26,13 @@ def main():
 
     # load data
     window_size = 500
-    x_train, y_train, x_val, y_val, x_test, y_test, edge_list, addendum, scaler = load_physiology(window_size)
+    x_train, y_train, x_test, y_test, edge_list, addendum, scaler = our_load_physiology(window_size)
     joblib.dump(scaler, f'{result_dir}scaler.joblib')
     # scaler2 = joblib.load(f'{result_dir}scaler.joblib')
 
     # instantiate a digital patient model
-    G = dgl.DGLGraph(edge_list)
-
-    dp = digital_patient.DigitalPatient(G, epochs=20, lr=0.01, window_size=window_size-2)
+    G = dgl.graph(edge_list)
+    dp = digital_patient.DigitalPatient(G, epochs=1, lr=0.01, window_size=window_size-2)
 
     # plot the graph corresponding to the digital patient
     nx_G = dp.G.to_networkx()
@@ -98,7 +98,6 @@ def main():
             break
 
     return
-
 
 if __name__ == '__main__':
     main()
