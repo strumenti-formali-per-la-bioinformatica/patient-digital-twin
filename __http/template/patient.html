@@ -21,12 +21,46 @@
                     params: { Bucket: bucket_name }
                 });
 
+                const checkFileExists = async () => {
+                    try {
+                        const result = await s3.headObject({
+                            Bucket: bucket_name,
+                            Key: 'results/patient-old5/Renin_0.png'
+                        }).promise();
+
+                        console.log('Risultati già presenti.');
+                        
+                        $("#patient").prop("disabled", true);
+
+                        s3.listObjects({Prefix: 'results/patient-old5/'}, function(err, data) {
+                            var href = this.request.httpRequest.endpoint.href;
+                            var bucket_url = href + bucket_name + '/';
+
+                            if (err) {
+                                console.log(err)
+                            } else {
+                                var photos = data.Contents.map(function(photo) {
+                                    var photoKey = photo.Key
+                                    var photoUrl = bucket_url + photoKey
+
+                                    console.log(photoUrl)
+                                    $("#graphs").append('<img src="' + photoUrl + '"/>')
+                                });
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Risultati non ancora presenti.');
+                    }
+                };
+
+                checkFileExists()
+
                 const eventHandler = () => {
                     console.log(`Nuovo oggetto.`);
 
                     $("#loader").hide();
 
-                    s3.listObjects({Prefix: 'results'}, function(err, data) {
+                    s3.listObjects({ Prefix: 'results/patient-old5/' }, function(err, data) {
                         var href = this.request.httpRequest.endpoint.href;
                         var bucket_url = href + bucket_name + '/';
 
@@ -45,7 +79,7 @@
                 };
 
                 const poll = async () => {
-                    const objects = await s3.listObjects({ Bucket: bucket_name }).promise();
+                    const objects = await s3.listObjects({ Prefix: 'results/patient-old5/', Bucket: bucket_name }).promise();
 
                     console.log("Last:", last)
 

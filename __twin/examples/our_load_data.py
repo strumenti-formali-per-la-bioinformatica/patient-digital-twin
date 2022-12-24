@@ -5,11 +5,14 @@ from scipy import interpolate
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
+from pathlib import Path
 
 def our_load_physiology(window_size=1000):
 
+    dir = str(Path('__twin/').parent.absolute())
+
     #shape(2500,13)
-    x_ras = pd.read_csv((str(dir) + '/' + 'CARDIO_drug-0_glu-6_infection-0_renal-normal.csv'))
+    x_ras = pd.read_csv((str(dir) + '/' + 'DKD_drug-5_glu-6_infection-0_renal-normal.csv'))
     #print(np.shape(x_ras))
 
     #shape(1808,27), prende le feature dalla colonna 1

@@ -101,7 +101,7 @@ def main():
             plt.tight_layout()
             plt.savefig(f'{result_dir}{name}_{j}.png')
             s3.upload_file(f'{result_dir}{name}_{j}.png', bucket, f'{result_dir}{name}_{j}.png')
-            plt.show()
+            #plt.show()
             break
 
     return
