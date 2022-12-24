@@ -29,33 +29,31 @@
                         }).promise();
 
                         console.log('Risultati già presenti.');
-                        return true;
+                        
+                        $("#ras").prop("disabled", true);
+
+                        s3.listObjects({Prefix: 'results/RAS/'}, function(err, data) {
+                            var href = this.request.httpRequest.endpoint.href;
+                            var bucket_url = href + bucket_name + '/';
+
+                            if (err) {
+                                console.log(err)
+                            } else {
+                                var photos = data.Contents.map(function(photo) {
+                                    var photoKey = photo.Key
+                                    var photoUrl = bucket_url + photoKey
+
+                                    console.log(photoUrl)
+                                    $("#graph").html('<img src="' + photoUrl + '"/>')
+                                });
+                            }
+                        });
                     } catch (error) {
                         console.error('Risultati non ancora presenti.');
-                        return false;
                     }
                 };
 
-                if(checkFileExists() == true) {
-                    $("#ras").prop("disabled", true);
-
-                    s3.listObjects({Prefix: 'results/RAS/'}, function(err, data) {
-                        var href = this.request.httpRequest.endpoint.href;
-                        var bucket_url = href + bucket_name + '/';
-
-                        if (err) {
-                            console.log(err)
-                        } else {
-                            var photos = data.Contents.map(function(photo) {
-                                var photoKey = photo.Key
-                                var photoUrl = bucket_url + photoKey
-
-                                console.log(photoUrl)
-                                $("#graph").html('<img src="' + photoUrl + '"/>')
-                            });
-                        }
-                    });
-                }
+                checkFileExists()
 
                 const eventHandler = () => {
                     console.log(`Nuovo oggetto.`);

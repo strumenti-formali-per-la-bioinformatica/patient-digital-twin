@@ -7,6 +7,8 @@ import seaborn as sns
 import networkx as nx
 import numpy as np
 import joblib
+import boto3
+import s3_routine
 
 import digital_patient
 
@@ -19,6 +21,10 @@ from plot_graph import plot_graph
 
 
 def main():
+    s3_routine.download()
+    s3 = boto3.client('s3', region_name='eu-central-1')
+    bucket = 'digital-patient-twin-bucket'
+
     # create directory to save results
     result_dir = 'results/patient-old5/'
     if not os.path.isdir(result_dir):
@@ -93,7 +99,8 @@ def main():
             plt.ylabel(ylabel)
             plt.xlabel(xlabel)
             plt.tight_layout()
-            plt.savefig(f'{result_dir}/{name}_{j}.png')
+            plt.savefig(f'{result_dir}{name}_{j}.png')
+            s3.upload_file(f'{result_dir}{name}_{j}.png', bucket, f'{result_dir}{name}_{j}.png')
             plt.show()
             break
 

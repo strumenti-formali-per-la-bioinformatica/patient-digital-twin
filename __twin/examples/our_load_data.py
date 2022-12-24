@@ -9,11 +9,11 @@ from sklearn.model_selection import train_test_split
 def our_load_physiology(window_size=1000):
 
     #shape(2500,13)
-    x_ras = pd.read_csv('data/70/DKD_drug-0_glu-6_infection-0_renal-normal.csv')
+    x_ras = pd.read_csv((str(dir) + '/' + 'CARDIO_drug-0_glu-6_infection-0_renal-normal.csv'))
     #print(np.shape(x_ras))
 
     #shape(1808,27), prende le feature dalla colonna 1
-    x_cardio = pd.read_csv('data/70/CARDIO_drug-0_glu-6_infection-0_renal-normal.csv', index_col=0)
+    x_cardio = pd.read_csv((str(dir) + '/' + 'CARDIO_drug-0_glu-6_infection-0_renal-normal.csv'), index_col=0)
     #print(np.shape(x_cardio))
 
     #shape(1808,5), mantiene solo le prime 5 colonne

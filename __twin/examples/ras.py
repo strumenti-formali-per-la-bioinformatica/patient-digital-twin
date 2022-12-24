@@ -8,10 +8,14 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from scipy.integrate import solve_ivp
+import dgl
 
 import digital_patient
-from scipy import interpolate
+import s3_routine
+import boto3
 
+from pathlib import Path
+from scipy import interpolate
 from digital_patient.conformal.base import RegressorAdapter
 from digital_patient.conformal.icp import IcpRegressor
 from digital_patient.conformal.nc import RegressorNc
@@ -22,15 +26,20 @@ def main():
     # TODO: graph embedding for predictions
     # TODO: predict trajectory not only the next state
 
+    s3_routine.download()
+    s3 = boto3.client('s3', region_name='eu-central-1')
+    bucket = 'digital-patient-twin-bucket'
+    dir = str(Path('__twin/').parent.absolute())
+
     result_dir = 'results/RAS/'
     if not os.path.isdir(result_dir):
         os.makedirs(result_dir)
 
     # x_ras = pd.read_csv('data/70/DKD_drug-5_glu-10_infection-0_renal-impaired.csv')
     # x_diabetes = pd.read_csv('data/70/DIABETES_glu-17.csv')
-    x_ras = pd.read_csv('data/70/DKD_drug-5_glu-17_infection-0_renal-normal.csv')
+    x_ras = pd.read_csv(str(dir) + '/' + 'DKD_drug-5_glu-6_infection-0_renal-normal.csv')
     x_ras.drop(['angII_norm', 'IR'], axis=1, inplace=True)
-    x_diabetes = pd.read_csv('data/70/DIABETES_glu-5.csv')
+    x_diabetes = pd.read_csv(str(dir) + '/' + 'DIABETES_glu-5.csv')
     # x_cardio = pd.read_csv('data/70/CARDIO_drug-5_glu-10_infection-0_renal-impaired.csv', index_col=0).iloc[:, :5]
     tx_ras = x_ras['t']
     tx_diabetes = x_diabetes['t']
@@ -91,9 +100,6 @@ def main():
     # x_val = scaler.transform(x_val)
     # x_test = scaler.transform(x_test)
 
-    dp = digital_patient.DigitalPatient(epochs=30, lr=0.01, window_size=window_size-2)
-    # elist = [(1, 0), (2, 0), (3, 1), (4, 2)]
-    # elist = [(0, 0), (1, 1), (0, 0), (1, 1), (0, 0), (1, 1), (0, 0), (1, 1), (2, 2), (1, 0), (0, 1)]
     elist = [
         (0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5),
         (6, 6), (7, 7), (8, 8), (9, 9), (10, 10),
@@ -102,11 +108,16 @@ def main():
         (4, 1), (3, 1), (1, 7), (1, 5), (6, 5), (5, 3),
         (5, 7), (5, 8), (5, 9), (10, 7), (10, 1)
     ]
+
     # elist = [(0, 0), (1, 1), (2, 2), (1, 0), (2, 0)]
     # elist = [(0, 0), (1, 1), (1, 0)]
-    dp.build_graph(elist)
+    G = dgl.graph(elist)
+    dp = digital_patient.DigitalPatient(G, epochs=30, lr=0.01, window_size=window_size-2)
+    # elist = [(1, 0), (2, 0), (3, 1), (4, 2)]
+    # elist = [(0, 0), (1, 1), (0, 0), (1, 1), (0, 0), (1, 1), (0, 0), (1, 1), (2, 2), (1, 0), (0, 1)]
+    #dp.build_graph(elist)
 
-    nx_G = dp.G_.to_networkx()  # .to_undirected()
+    nx_G = dp.G.to_networkx()  # .to_undirected()
     # Kamada-Kawaii layout usually looks pretty for arbitrary graphs
     # pos = nx.spring_layout(nx_G)
     pos = nx.circular_layout(nx_G)
@@ -117,8 +128,9 @@ def main():
     nx.draw(nx_G, pos, alpha=0.3)
     nx.draw_networkx_labels(nx_G, pos, labels=node_labels)
     plt.tight_layout()
-    plt.savefig(f'{result_dir}/graph.png')
-    plt.show()
+    plt.savefig(f'{result_dir}graph.png')
+    s3.upload_file(f'{result_dir}graph.png', bucket, f'{result_dir}graph.png')
+    #plt.show()
 
     underlying_model = RegressorAdapter(dp)
     nc = RegressorNc(underlying_model)
@@ -144,7 +156,8 @@ def main():
             plt.xlabel('t [days]')
             plt.tight_layout()
             plt.savefig(f'{result_dir}/{name}_{j}.png')
-            plt.show()
+            s3.upload_file(f'{result_dir}{name}_{j}.png', bucket, f'{result_dir}{name}_{j}.png')
+            #plt.show()
             break
 
     # n_rows = int(np.sqrt(dp.G_.batch_num_nodes)+1)
