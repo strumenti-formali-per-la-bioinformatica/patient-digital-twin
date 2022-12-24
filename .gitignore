@@ -1,3 +1,8 @@
+# Data files
+DKD_*
+DIABETES_*
+CARDIO_*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

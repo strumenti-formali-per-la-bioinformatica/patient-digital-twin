@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <script src="https://code.jquery.com/jquery-3.6.3.js" integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
+        <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1282.0.min.js"></script>
+        <title>Digital Twin Provider</title>
+        <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+        <script>
+            $(document).ready(function() {
+                var last = 0;
+                var bucket_name = 'digital-patient-twin-bucket';
+
+                AWS.config.region = 'eu-central-1';
+                AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                    IdentityPoolId: 'eu-central-1:d19ddc73-506d-40a4-a322-2465fa86b82a',
+                });
+
+                var s3 = new AWS.S3({
+                    params: { Bucket: bucket_name }
+                });
+
+                const checkFileExists = async () => {
+                    try {
+                        const result = await s3.headObject({
+                            Bucket: bucket_name,
+                            Key: 'results/RAS/graph.png'
+                        }).promise();
+
+                        console.log('Risultati già presenti.');
+                        return true;
+                    } catch (error) {
+                        console.error('Risultati non ancora presenti.');
+                        return false;
+                    }
+                };
+
+                if(checkFileExists() == true) {
+                    $("#ras").prop("disabled", true);
+
+                    s3.listObjects({Prefix: 'results/RAS/'}, function(err, data) {
+                        var href = this.request.httpRequest.endpoint.href;
+                        var bucket_url = href + bucket_name + '/';
+
+                        if (err) {
+                            console.log(err)
+                        } else {
+                            var photos = data.Contents.map(function(photo) {
+                                var photoKey = photo.Key
+                                var photoUrl = bucket_url + photoKey
+
+                                console.log(photoUrl)
+                                $("#graph").html('<img src="' + photoUrl + '"/>')
+                            });
+                        }
+                    });
+                }
+
+                const eventHandler = () => {
+                    console.log(`Nuovo oggetto.`);
+
+                    $("#loader").hide();
+
+                    s3.listObjects({Prefix: 'results/RAS/'}, function(err, data) {
+                        var href = this.request.httpRequest.endpoint.href;
+                        var bucket_url = href + bucket_name + '/';
+
+                        if (err) {
+                            console.log(err)
+                        } else {
+                            var photos = data.Contents.map(function(photo) {
+                                var photoKey = photo.Key
+                                var photoUrl = bucket_url + photoKey
+
+                                console.log(photoUrl)
+                                $("#graph").html('<img src="' + photoUrl + '"/>')
+                            });
+                        }
+                    });
+                };
+
+                const poll = async () => {
+                    const objects = await s3.listObjects({ Bucket: bucket_name }).promise();
+
+                    console.log("Last:", last)
+
+                    if(last == 0) last = objects.Contents.length;
+
+                    if (objects.Contents.length > last) {
+                        last = objects.Contents.length;
+                        eventHandler(objects.Contents);
+                    }
+
+                    setTimeout(poll, 3000); // Poll ogni 5 secondi
+                };
+                
+                $("#ras").on('click', function() {
+                    poll();
+
+                    console.log('Lanciato: RAS')
+
+                    $("#loader").show();
+                    $("#ras").prop("disabled", true);
+
+                    $.ajax({
+                        type: "GET",
+                        url: '/run/ras'
+                    });
+                });
+            });
+        </script>
+        <style>
+            .loader {
+                width: 80px;
+                height: 80px;
+                border: 7.5px solid #FFF;
+                border-bottom-color: #3964e3;
+                border-radius: 50%;
+                box-sizing: border-box;
+                animation: rotation 1s linear infinite;
+            }
+
+            @keyframes rotation {
+                0% {
+                    transform: rotate(0deg);
+                }
+                    
+                100% {
+                    transform: rotate(360deg);
+                }
+            } 
+        </style>
+    </head>
+    <body>
+        <div class="d-flex" id="wrapper">
+            <div class="border-end bg-white" id="sidebar-wrapper">
+                <div class="sidebar-heading border-bottom bg-light">Digital Twin Provider</div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/">Proof of Concept</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/ras">Run: RAS</a>
+                    <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/patient">Run: Patient</a>
+                </div>
+            </div>
+            <div id="page-content-wrapper">
+                <nav style="min-height: 58px" class="navbar navbar-expand-lg navbar-light bg-light border-bottom"></nav>
+                <div class="container-fluid">
+                    <center>
+                        <button style="margin-top: 25px" id="ras" type="button" class="w-75 p-3 btn btn-primary">RAS (Veloce, circa 30 secondi)</button>
+                        <div style="margin-top: 25px; display: none" id="loader" class="loader"></div>
+                        <div id="graph"></div>
+                    </center>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

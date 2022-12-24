@@ -6,3 +6,5 @@ pandas
 seaborn
 torch
 flask
+boto3
+flask-cors
