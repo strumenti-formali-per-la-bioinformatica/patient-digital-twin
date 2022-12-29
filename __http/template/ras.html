@@ -5,8 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <script src="https://code.jquery.com/jquery-3.6.3.js" integrity="sha256-nQLuAZGRRcILA+6dMBOvcRh5Pe310sBpanc6+QBmyVM=" crossorigin="anonymous"></script>
         <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1282.0.min.js"></script>
-        <title>Digital Twin Provider</title>
+        <title>DT Provider</title>
         <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
         <script>
             $(document).ready(function() {
                 var last = 0;
@@ -141,10 +142,11 @@
                 </div>
             </div>
             <div id="page-content-wrapper">
-                <nav style="min-height: 58px" class="navbar navbar-expand-lg navbar-light bg-light border-bottom"></nav>
+                <nav style="min-height: 58px" class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                    <center><button style="margin-top: 25px; margin-bottom: 25px;" id="ras" type="button" class="w-75 p-3 btn btn-primary">RAS (Veloce, circa 30 secondi)</button></center>
+                </nav>
                 <div class="container-fluid">
                     <center>
-                        <button style="margin-top: 25px" id="ras" type="button" class="w-75 p-3 btn btn-primary">RAS (Veloce, circa 30 secondi)</button>
                         <div style="margin-top: 25px; display: none" id="loader" class="loader"></div>
                         <div id="graph"></div>
                     </center>
